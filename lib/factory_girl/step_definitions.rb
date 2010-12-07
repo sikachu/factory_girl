@@ -44,16 +44,21 @@ FactoryGirl.registry.each do |name, factory|
     count.to_i.times { FactoryGirl.create(factory.name) }
   end
 
+  factory_columns = []
   if factory.build_class.respond_to?(:columns)
-    factory.build_class.columns.each do |column|
-      human_column_name = column.name.downcase.gsub('_', ' ')
-      Given /^an? #{factory.human_name} exists with an? #{human_column_name} of "([^"]*)"$/i do |value|
-        FactoryGirl.create(factory.name, column.name => value)
-      end
+    factory_columns = factory.build_class.columns.map{ |c| c.name }
+  elsif factory.build_class.respond_to?(:fields)
+    factory_columns = factory.build_class.fields.keys
+  end
 
-      Given /^(\d+) #{factory.human_name.pluralize} exist with an? #{human_column_name} of "([^"]*)"$/i do |count, value|
-        count.to_i.times { FactoryGirl.create(factory.name, column.name => value) }
-      end
+  factory_columns.each do |column_name|
+    human_column_name = column_name.downcase.gsub('_', ' ')
+    Given /^an? #{factory.human_name} exists with an? #{human_column_name} of "([^"]*)"$/i do |value|
+      FactoryGirl.create(factory.name, column_name => value)
+    end
+
+    Given /^(\d+) #{factory.human_name.pluralize} exist with an? #{human_column_name} of "([^"]*)"$/i do |count, value|
+      count.to_i.times { FactoryGirl.create(factory.name, column_name => value) }
     end
   end
 end
